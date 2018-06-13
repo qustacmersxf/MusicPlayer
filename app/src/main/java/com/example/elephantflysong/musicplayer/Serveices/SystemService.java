@@ -1,6 +1,5 @@
 package com.example.elephantflysong.musicplayer.Serveices;
 
-import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
