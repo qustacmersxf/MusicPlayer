@@ -1,21 +1,28 @@
 package com.example.elephantflysong.musicplayer;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,12 +51,26 @@ public class MainPlayActivity extends AppCompatActivity {
     private TextView text_currentTime;
     private TextView text_currentMusic;
     private SeekBar seekBar;
+    private ProgressBar progressBar;
 
     private MediaPlayer mplayer;
 
     private RecyclerView rv_musics;
     private MusicAdapter adapter;
     private ArrayList<File> files;
+
+    private Handler handler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            if (msg.what == 1){
+                rv_musics.setLayoutManager(new LinearLayoutManager(MainPlayActivity.this));
+                rv_musics.setItemAnimator(new DefaultItemAnimator());
+                rv_musics.setAdapter(adapter);
+                return true;
+            }
+            return false;
+        }
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,20 +132,34 @@ public class MainPlayActivity extends AppCompatActivity {
         seekBar = findViewById(R.id.seekBar);
         rv_musics = findViewById(R.id.rv_musics);
 
+
         text_currentMusic.setText("无");
     }
 
-    private void browserFile(File file){
-        files = searchMP3(file);
+    private void browserFile(final File file){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("检索本地音频");
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_search, null);
+        builder.setView(view);
+        builder.setCancelable(true);
+        builder.setPositiveButton("后台检索", null);
+        final AlertDialog dialog = builder.show();
 
-        if (files.size() > 0){
-            adapter = new MusicAdapter(files);
-            rv_musics.setLayoutManager(new LinearLayoutManager(this));
-            rv_musics.setItemAnimator(new DefaultItemAnimator());
-            rv_musics.setAdapter(adapter);
-        }else{
-            Toast.makeText(MainPlayActivity.this, "未找到MP3文件", Toast.LENGTH_SHORT).show();
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                files = searchMP3(file);
+                if (files.size() > 0){
+                    adapter = new MusicAdapter(files);
+                    Message msg = new Message();
+                    msg.what = 1;
+                    handler.sendMessage(msg);
+                }else{
+                    Toast.makeText(MainPlayActivity.this, "未找到MP3文件", Toast.LENGTH_SHORT).show();
+                }
+                dialog.dismiss();
+            }
+        }).start();
     }
 
     private ArrayList<File> searchMP3(File file){

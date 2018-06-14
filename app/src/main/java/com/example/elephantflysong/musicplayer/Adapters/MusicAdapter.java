@@ -10,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.elephantflysong.musicplayer.Music.Music;
 import com.example.elephantflysong.musicplayer.R;
 
 import java.io.File;
