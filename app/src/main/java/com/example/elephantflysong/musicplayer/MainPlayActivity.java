@@ -1,15 +1,16 @@
 package com.example.elephantflysong.musicplayer;
 
 import android.app.Activity;
-import android.content.DialogInterface;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -28,16 +30,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.elephantflysong.musicplayer.Adapters.MusicAdapter;
-import com.example.elephantflysong.musicplayer.Serveices.SystemService;
+import com.example.elephantflysong.musicplayer.Services.MusicService;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class MainPlayActivity extends AppCompatActivity {
+public class MainPlayActivity extends AppCompatActivity implements View.OnClickListener{
 
     private static final int REQUESTCODE_ACTION_GET_CONTENT = 1;
 
-    private SystemService systemService;
     private Cursor cursor;
 
     private ImageButton bt_list;
@@ -59,6 +61,10 @@ public class MainPlayActivity extends AppCompatActivity {
     private MusicAdapter adapter;
     private ArrayList<File> files;
 
+    private MusicService.MusicBinder binder;
+
+    private boolean isPause = false;
+
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
@@ -66,11 +72,37 @@ public class MainPlayActivity extends AppCompatActivity {
                 rv_musics.setLayoutManager(new LinearLayoutManager(MainPlayActivity.this));
                 rv_musics.setItemAnimator(new DefaultItemAnimator());
                 rv_musics.setAdapter(adapter);
+
                 return true;
             }
             return false;
         }
     });
+
+    private AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (connection != null){
+                unbindService(connection);
+                connection = null;
+            }
+            Intent intent = new Intent(MainPlayActivity.this, MusicService.class);
+            intent.putExtra("files", new MyArrayList(files));
+            bindService(intent, connection, BIND_AUTO_CREATE);
+        }
+    };
+
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            binder = (MusicService.MusicBinder)service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,8 +164,51 @@ public class MainPlayActivity extends AppCompatActivity {
         seekBar = findViewById(R.id.seekBar);
         rv_musics = findViewById(R.id.rv_musics);
 
-
         text_currentMusic.setText("无");
+
+        bt_list.setOnClickListener(this);
+        bt_play.setOnClickListener(this);
+        bt_stop.setOnClickListener(this);
+        bt_moveUp.setOnClickListener(this);
+        bt_moveDown.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.ibtn_listplay:
+                break;
+            case R.id.ibtn_start:
+                if (binder != null){
+                    if (isPause){
+                        binder.startMusic();
+                        isPause = false;
+                        bt_play.setBackgroundResource(R.drawable.pause);
+                    }else{
+                        binder.pauseMusic();
+                        isPause = true;
+                        bt_play.setBackgroundResource(R.drawable.start);
+                    }
+                }
+                break;
+            case R.id.ibtn_stop:
+                if (binder != null){
+                    binder.stopMusic();
+                }
+                break;
+            case R.id.ibtn_next:
+                if (binder != null){
+                    binder.nextMusic();
+                }
+                break;
+            case R.id.ibtn_before:
+                if (binder != null){
+                    binder.previousMusic();
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     private void browserFile(final File file){
@@ -180,5 +255,12 @@ public class MainPlayActivity extends AppCompatActivity {
             }
         }
         return result;
+    }
+
+    public class MyArrayList implements Serializable{
+        ArrayList<File> data;
+        public MyArrayList(ArrayList<File> data){
+            this.data = data;
+        }
     }
 }
