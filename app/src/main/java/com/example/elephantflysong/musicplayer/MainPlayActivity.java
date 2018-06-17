@@ -39,6 +39,10 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
 
     private static final int REQUESTCODE_ACTION_GET_CONTENT = 1;
 
+    public static final int MUSIC_STOP = 0;
+    public static final int MUSIC_START = 1;
+    public static final int MUSIC_PAUSE = 2;
+
     private Cursor cursor;
 
     private ImageButton bt_list;
@@ -59,21 +63,27 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
 
     private MusicService.MusicBinder binder;
 
-    private boolean isPause = false;
+    private int status = MUSIC_STOP;
     public static int position = -1;
 
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
-            if (msg.what == 1){
-                rv_musics.setLayoutManager(new LinearLayoutManager(MainPlayActivity.this));
-                rv_musics.setItemAnimator(new DefaultItemAnimator());
-                adapter = new MusicAdapter(files);
-                adapter.setOnItemClickListener(onItemClickListener);
-                rv_musics.setAdapter(adapter);
-                position = 0;
-                binder.setFiles(files);
-                return true;
+            switch (msg.what){
+                case 1:
+                    rv_musics.setLayoutManager(new LinearLayoutManager(MainPlayActivity.this));
+                    rv_musics.setItemAnimator(new DefaultItemAnimator());
+                    adapter = new MusicAdapter(files);
+                    adapter.setOnItemClickListener(onItemClickListener);
+                    rv_musics.setAdapter(adapter);
+                    position = 0;
+                    binder.setFiles(files);
+                    return true;
+                case 2:
+                    bt_play.setBackgroundResource(R.drawable.pause);
+                    return true;
+                default:
+                    break;
             }
             return false;
         }
@@ -84,6 +94,8 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
         public void onItemClick(int position) {
             MainPlayActivity.position = position;
             binder.startMusic(position);
+            status = MUSIC_START;
+            bt_play.setBackgroundResource(R.drawable.pause);
         }
     };
 
@@ -179,32 +191,32 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
                 break;
             case R.id.ibtn_start:
                 if (binder != null){
-                    if (isPause){
-                        if (position != -1){
-                            binder.startMusic();
-                            isPause = false;
-                            bt_play.setBackgroundResource(R.drawable.pause);
-                        }
+                    if (status != MUSIC_START){
+                        binder.startMusic();
+                        bt_play.setBackgroundResource(R.drawable.pause);
+                        status = MUSIC_START;
                     }else{
                         binder.pauseMusic();
-                        isPause = true;
                         bt_play.setBackgroundResource(R.drawable.start);
+                        status = MUSIC_PAUSE;
                     }
                 }
                 break;
             case R.id.ibtn_stop:
                 if (binder != null){
                     binder.stopMusic();
+                    status = MUSIC_STOP;
+                    bt_play.setBackgroundResource(R.drawable.start);
                 }
                 break;
             case R.id.ibtn_next:
                 if (binder != null){
-                    binder.nextMusic();
+                    position = binder.nextMusic();
                 }
                 break;
             case R.id.ibtn_before:
                 if (binder != null){
-                    binder.previousMusic();
+                    position = binder.previousMusic();
                 }
                 break;
             default:

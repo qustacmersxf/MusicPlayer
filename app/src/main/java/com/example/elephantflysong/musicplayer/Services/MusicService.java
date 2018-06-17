@@ -64,7 +64,6 @@ public class MusicService extends Service {
 
     public class MusicBinder extends Binder{
         public void startMusic(int index){
-            Log.i("info", "MusicBinder.startMusic()");
             if (player == null){
                 player = new MediaPlayer();
             }
@@ -75,7 +74,7 @@ public class MusicService extends Service {
                 player.start();
                 player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
-                    public void onCompletion(MediaPlayer mp) {
+                    public void onCompletion(MediaPlayer mp){
                         nextMusic();
                     }
                 });
@@ -103,7 +102,7 @@ public class MusicService extends Service {
             player.stop();
         }
 
-        public void nextMusic(){
+        public int nextMusic(){
             player.stop();
             try{
                 position = (position + 1) % files.size();
@@ -114,10 +113,12 @@ public class MusicService extends Service {
                 player.start();
             }catch (IOException e){
                 e.printStackTrace();
+            }finally {
+                return position;
             }
         }
 
-        public void previousMusic(){
+        public int previousMusic(){
             player.stop();
             try{
                 position = (position + files.size() - 1) % files.size();
@@ -128,6 +129,8 @@ public class MusicService extends Service {
                 player.start();
             }catch (IOException e){
                 e.printStackTrace();
+            }finally {
+                return position;
             }
         }
 
