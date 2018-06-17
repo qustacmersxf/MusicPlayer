@@ -22,6 +22,7 @@ import java.util.ArrayList;
 public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.ViewHolder> {
 
     private ArrayList<File> list;
+    private OnItemClickListener listener;
 
     public MusicAdapter(ArrayList<File> list){
         this.list = new ArrayList<>();
@@ -37,8 +38,14 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         holder.setMusic(list.get(position));
+        holder.view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.onItemClick(position);
+            }
+        });
     }
 
     @Override
@@ -46,13 +53,19 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.ViewHolder> 
         return list.size();
     }
 
+    public void setOnItemClickListener(OnItemClickListener listener){
+        this.listener = listener;
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder{
         private ImageView image_cover;
         private TextView text_name;
         private TextView text_artist;
+        public View view;
 
         public ViewHolder(View view){
             super(view);
+            this.view = view;
             image_cover = view.findViewById(R.id.item_musics_image_cover);
             text_name = view.findViewById(R.id.item_musics_text_munsicName);
             text_artist = view.findViewById(R.id.item_musics_text_artist);
@@ -61,9 +74,13 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.ViewHolder> 
         public void setMusic(File music){
             image_cover.setBackgroundResource(R.drawable.music);
             text_name.setText(music.getName());
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            /*MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             mmr.setDataSource(music.getPath());
-            text_artist.setText(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+            text_artist.setText(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));*/
         }
+    }
+
+    public interface OnItemClickListener{
+        void onItemClick(int position);
     }
 }

@@ -1,11 +1,9 @@
 package com.example.elephantflysong.musicplayer.AsyncTasks;
 
-import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 
 import com.example.elephantflysong.musicplayer.Interfaces.MusicListener;
-import com.example.elephantflysong.musicplayer.Music.Music;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +13,9 @@ import java.util.ArrayList;
  * Created by ElephantFlySong on 2018/6/15.
  */
 
-public class MusicTask extends AsyncTask<Integer, Void, Void> {
+public class MusicTask extends AsyncTask<File, Void, Integer> {
+
+    File file;
 
     public static final int MUSIC_START = 0;
     public static final int MUSIC_PAUSE = 1;
@@ -44,13 +44,31 @@ public class MusicTask extends AsyncTask<Integer, Void, Void> {
     }
 
     @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
+    protected void onPostExecute(Integer status) {
+        switch (status){
+            case MUSIC_START:
+                listener.onStart();
+                break;
+            case MUSIC_PAUSE:
+                listener.onPause();
+                break;
+            case MUSIC_STOP:
+                listener.onStop();
+                break;
+            case MUSIC_NEXT:
+                listener.onNext();
+                break;
+            case MUSIC_PREVIOUS:
+                listener.onPrevious();
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
-    protected Void doInBackground(Integer... params) {
-        File file = musics.get(params[0]);
+    protected Integer doInBackground(File... params) {
+        file = params[0];
         position = musics.indexOf(file);
         if (mediaPlayer == null){
             mediaPlayer = new MediaPlayer();
@@ -64,18 +82,22 @@ public class MusicTask extends AsyncTask<Integer, Void, Void> {
                         if (status != MUSIC_START){
                             mediaPlayer.start();
                             status = MUSIC_START;
+                            cmd = -1;
                         }
                         break;
                     case MUSIC_PAUSE:
                         if (status == MUSIC_START){
                             mediaPlayer.pause();
                             status = MUSIC_PAUSE;
+                            cmd = -1;
+                            return status;
                         }
                         break;
                     case MUSIC_STOP:
                         if (status == MUSIC_START || status == MUSIC_PAUSE){
                             mediaPlayer.stop();
                             status = MUSIC_STOP;
+                            return status;
                         }
                         break;
                     case MUSIC_NEXT:
@@ -84,14 +106,14 @@ public class MusicTask extends AsyncTask<Integer, Void, Void> {
                         mediaPlayer.setDataSource(musics.get(position).getPath());
                         mediaPlayer.prepare();
                         mediaPlayer.start();
-                        break;
+                        return status;
                     case MUSIC_PREVIOUS:
                         position = (position + musics.size() - 1) % musics.size();
                         mediaPlayer.stop();
                         mediaPlayer.setDataSource(musics.get(position).getPath());
                         mediaPlayer.prepare();
                         mediaPlayer.start();
-                        break;
+                        return status;
                     default:
                         break;
                 }
@@ -102,8 +124,10 @@ public class MusicTask extends AsyncTask<Integer, Void, Void> {
         return null;
     }
 
-    public void onStart(){
+    public void onStart(int position){
+        this.position = position;
         cmd = MUSIC_START;
+        listener.onStart();
     }
 
     public void onPause(){

@@ -33,7 +33,6 @@ import com.example.elephantflysong.musicplayer.Adapters.MusicAdapter;
 import com.example.elephantflysong.musicplayer.Services.MusicService;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.ArrayList;
 
 public class MainPlayActivity extends AppCompatActivity implements View.OnClickListener{
@@ -53,9 +52,6 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
     private TextView text_currentTime;
     private TextView text_currentMusic;
     private SeekBar seekBar;
-    private ProgressBar progressBar;
-
-    private MediaPlayer mplayer;
 
     private RecyclerView rv_musics;
     private MusicAdapter adapter;
@@ -64,6 +60,7 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
     private MusicService.MusicBinder binder;
 
     private boolean isPause = false;
+    public static int position = -1;
 
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
@@ -71,24 +68,22 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
             if (msg.what == 1){
                 rv_musics.setLayoutManager(new LinearLayoutManager(MainPlayActivity.this));
                 rv_musics.setItemAnimator(new DefaultItemAnimator());
+                adapter = new MusicAdapter(files);
+                adapter.setOnItemClickListener(onItemClickListener);
                 rv_musics.setAdapter(adapter);
-
+                position = 0;
+                binder.setFiles(files);
                 return true;
             }
             return false;
         }
     });
 
-    private AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
+    private MusicAdapter.OnItemClickListener onItemClickListener = new MusicAdapter.OnItemClickListener() {
         @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (connection != null){
-                unbindService(connection);
-                connection = null;
-            }
-            Intent intent = new Intent(MainPlayActivity.this, MusicService.class);
-            intent.putExtra("files", new MyArrayList(files));
-            bindService(intent, connection, BIND_AUTO_CREATE);
+        public void onItemClick(int position) {
+            MainPlayActivity.position = position;
+            binder.startMusic(position);
         }
     };
 
@@ -110,6 +105,10 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
         setContentView(R.layout.main);
 
         initMainView();
+
+        Intent intent = new Intent(MainPlayActivity.this, MusicService.class);
+        startService(intent);
+        bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -181,9 +180,11 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
             case R.id.ibtn_start:
                 if (binder != null){
                     if (isPause){
-                        binder.startMusic();
-                        isPause = false;
-                        bt_play.setBackgroundResource(R.drawable.pause);
+                        if (position != -1){
+                            binder.startMusic();
+                            isPause = false;
+                            bt_play.setBackgroundResource(R.drawable.pause);
+                        }
                     }else{
                         binder.pauseMusic();
                         isPause = true;
@@ -230,6 +231,7 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
                     msg.what = 1;
                     handler.sendMessage(msg);
                 }else{
+                    //有隐患
                     Toast.makeText(MainPlayActivity.this, "未找到MP3文件", Toast.LENGTH_SHORT).show();
                 }
                 dialog.dismiss();
@@ -257,10 +259,4 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
         return result;
     }
 
-    public class MyArrayList implements Serializable{
-        ArrayList<File> data;
-        public MyArrayList(ArrayList<File> data){
-            this.data = data;
-        }
-    }
 }
