@@ -1,6 +1,7 @@
 package com.example.elephantflysong.musicplayer;
 
 import android.app.Activity;
+import android.app.usage.UsageEvents;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -21,6 +22,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
@@ -78,9 +80,6 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
                     rv_musics.setAdapter(adapter);
                     position = 0;
                     binder.setFiles(files);
-                    return true;
-                case 2:
-                    bt_play.setBackgroundResource(R.drawable.pause);
                     return true;
                 default:
                     break;
@@ -182,6 +181,20 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
         bt_stop.setOnClickListener(this);
         bt_moveUp.setOnClickListener(this);
         bt_moveDown.setOnClickListener(this);
+
+        bt_play.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    if (status == MUSIC_START) {
+                        bt_play.setImageDrawable(getResources().getDrawable(R.drawable.pause_press));
+                    }else{
+                        bt_play.setImageDrawable(getResources().getDrawable(R.drawable.start_press));
+                    }
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -193,11 +206,13 @@ public class MainPlayActivity extends AppCompatActivity implements View.OnClickL
                 if (binder != null){
                     if (status != MUSIC_START){
                         binder.startMusic();
-                        bt_play.setBackgroundResource(R.drawable.pause);
+                        bt_play.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+                        //bt_play.setBackgroundResource(R.drawable.pause);
                         status = MUSIC_START;
                     }else{
                         binder.pauseMusic();
-                        bt_play.setBackgroundResource(R.drawable.start);
+                        //bt_play.setBackgroundResource(R.drawable.start);
+                        bt_play.setImageDrawable(getResources().getDrawable(R.drawable.start));
                         status = MUSIC_PAUSE;
                     }
                 }

@@ -76,7 +76,7 @@
                 android:layout_weight="1"
                 android:adjustViewBounds="true"
                 android:background="@android:color/transparent"
-                android:src="@drawable/stop"
+                android:src="@drawable/bt_stop_press"
                 android:layout_margin="5dp"
                 android:id="@+id/ibtn_stop"/>
             <ImageButton
@@ -84,7 +84,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:adjustViewBounds="true"
-                android:src="@drawable/before"
+                android:src="@drawable/bt_before_press"
                 android:background="@android:color/transparent"
                 android:layout_margin="5dp"
                 android:id="@+id/ibtn_before"/>
@@ -103,7 +103,7 @@
                 android:layout_weight="1"
                 android:adjustViewBounds="true"
                 android:background="@android:color/transparent"
-                android:src="@drawable/next"
+                android:src="@drawable/bt_next_press"
                 android:layout_margin="5dp"
                 android:id="@+id/ibtn_next"/>
             <ImageButton
@@ -111,7 +111,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:adjustViewBounds="true"
-                android:src="@drawable/list"
+                android:src="@drawable/bt_list_press"
                 android:background="@android:color/transparent"
                 android:layout_margin="5dp"
                 android:id="@+id/ibtn_listplay"/>
